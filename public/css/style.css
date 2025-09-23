@@ -1,0 +1,209 @@
+body {
+    font-family: "Noto Sans Thai", sans-serif;
+}
+
+.btn-primary {
+    background: linear-gradient(180deg, #f06a5d 0%, #e74c3c 100%) !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(180deg, #da5f54 0%, #d34636 100%) !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.btn-info {
+    background: linear-gradient(180deg, #5d78f0 0%, #4d61be 100%) !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.btn-info:hover,
+.btn-info:focus {
+    background: linear-gradient(180deg, #526ad4 0%, #4659ad 100%) !important;
+    border: none !important;
+    color: #fff !important;
+}
+
+.form-control:focus,
+.form-control:active,
+.form-select:focus,
+.form-select:active,
+.form-check-input:focus,
+.form-check-input:active {
+    border-color: #c7c3c3 !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+}
+
+/* Responsive image sizing for bus image on auth pages */
+.auth-bus-img {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 576px) {
+    .auth-bus-img {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 400px) {
+    .auth-bus-img {
+        max-width: 60%;
+    }
+}
+
+/* offcanvas */
+
+/* Admin navbar offcanvas (mobile) */
+#offcanvasNavbar {
+    /* Slimmer drawer */
+    --bs-offcanvas-width: 250px;
+}
+#offcanvasNavbar .offcanvas-header {
+    padding: 0.75rem 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+#offcanvasNavbar .offcanvas-title {
+    font-size: 1rem;
+}
+#offcanvasNavbar .offcanvas-body {
+    padding: 0.5rem 0.5rem;
+}
+#offcanvasNavbar .navbar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+#offcanvasNavbar .navbar-nav .nav-item {
+    list-style: none;
+}
+#offcanvasNavbar .navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    color: #212529;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+#offcanvasNavbar .navbar-nav .nav-link i {
+    font-size: 1.1rem;
+    width: 20px;
+    display: flex;
+    justify-content: center;
+}
+#offcanvasNavbar .navbar-nav .nav-link:hover {
+    background-color: #f8f9fa;
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+#offcanvasNavbar .navbar-nav .nav-link.active,
+#offcanvasNavbar .navbar-nav .nav-link:focus {
+    border-color: #d3463641;
+    background-color: #d346360a;
+    color: #5e1f18;
+}
+#offcanvasNavbar .dropdown-divider {
+    margin: 0.5rem 0;
+    opacity: 0.1;
+}
+
+/* navbar */
+
+.navbar-toggler {
+    padding: 10px 10px;
+}
+
+.navbar-toggler:focus {
+    text-decoration: none;
+    outline: 0;
+    box-shadow: none !important;
+}
+
+/* Footer */
+.site-footer {
+    margin-top: auto;
+}
+
+/* Auth navbar dropdown */
+.navbar .dropdown-menu.user-menu {
+    min-width: 280px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem 0;
+    transform-origin: top right;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.navbar .dropdown-menu.user-menu.show {
+    opacity: 1;
+    transform: scale(1);
+}
+.navbar .dropdown-hover .dropdown-menu {
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    transform: scale(0.98);
+}
+.navbar .dropdown-hover:hover > .dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: scale(1);
+}
+.avatar-initial {
+    width: 28px;
+    height: 28px;
+    aspect-ratio: 1 / 1;
+    border-radius: 9999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    overflow: hidden;
+    background: #e9ecef;
+    color: #495057;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+.avatar-initial.avatar-lg {
+    width: 44px;
+    height: 44px;
+    aspect-ratio: 1 / 1;
+    font-size: 1rem;
+}
+
+/* Offcanvas user block adjustments */
+.offcanvas-user .avatar-initial {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+}
+.offcanvas-user .user-text .name,
+.offcanvas-user .user-text .email {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dropdown-item:active {
+    color: #3a130f;
+    text-decoration: none;
+    background-color: #d346360a;
+}
+
+/* text */
+.text-dark {
+    color: #2c3e50;
+}
