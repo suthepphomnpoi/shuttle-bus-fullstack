@@ -44,7 +44,7 @@ class RoutePlaceController extends Controller
             'duration_min.integer' => 'เวลาต้องเป็นตัวเลข',
         ]);
 
-        // conditional rule
+        
         if ($nextSeq === 1 && (int)$validated['duration_min'] !== 0) {
             return response()->json(['message' => 'แถวแรกต้องมีเวลาเป็น 0 นาที'], 422);
         }
@@ -77,7 +77,7 @@ class RoutePlaceController extends Controller
             'duration_min.integer' => 'เวลาต้องเป็นตัวเลข',
         ]);
 
-        // duration rule depends on existing sequence_no
+        
         if ((int)$rp->sequence_no === 1 && (int)$validated['duration_min'] !== 0) {
             return response()->json(['message' => 'แถวแรกต้องมีเวลาเป็น 0 นาที'], 422);
         }
@@ -99,7 +99,7 @@ class RoutePlaceController extends Controller
         $seq = (int)$rp->sequence_no;
         $rp->delete();
 
-        // resequence for this route
+       
         $items = MpRoutePlace::where('route_id',$route->route_id)->orderBy('sequence_no')->get();
         $i = 1; foreach($items as $it){ $it->sequence_no = $i++; $it->save(); }
         return response()->json(['message' => 'Deleted']);
@@ -108,21 +108,52 @@ class RoutePlaceController extends Controller
     public function reorder($routeId, Request $request)
     {
         $route = MpRoute::findOrFail($routeId);
-        $ids = $request->input('order', []);
+        $ids = array_values(array_map('intval', (array)$request->input('order', [])));
         if (!is_array($ids) || empty($ids)) {
             return response()->json(['message' => 'ข้อมูลลำดับไม่ถูกต้อง'], 422);
         }
-        // Ensure ids belong to this route
+ 
         $validIds = MpRoutePlace::where('route_id',$route->route_id)->whereIn('route_place_id',$ids)->pluck('route_place_id')->toArray();
         if (count($validIds) !== count($ids)) {
             return response()->json(['message' => 'ข้อมูลไม่ตรงกับเส้นทาง'], 422);
         }
 
-        DB::transaction(function() use ($ids){
+        $items = MpRoutePlace::where('route_id', $route->route_id)
+            ->whereIn('route_place_id', $ids)
+            ->get()
+            ->keyBy('route_place_id');
+
+      
+        $firstId = (int)$ids[0];
+        if (!isset($items[$firstId]) || (int)$items[$firstId]->duration_min !== 0) {
+            return response()->json(['message' => 'แถวแรกต้องมีเวลาเป็น 0 นาที'], 422);
+        }
+        foreach ($ids as $index => $id) {
+            if ($index === 0) continue; // already checked first
+            if (!isset($items[$id]) || (int)$items[$id]->duration_min <= 0) {
+                return response()->json(['message' => 'แถวถัดไปต้องมีเวลา > 0 นาที'], 422);
+            }
+        }
+
+    
+        DB::transaction(function() use ($ids, $route) {
+            $cases = [];
+            $bindings = [];
             $seq = 1;
             foreach ($ids as $id) {
-                MpRoutePlace::where('route_place_id', (int)$id)->update(['sequence_no' => $seq++]);
+                $cases[] = 'WHEN TO_NUMBER(?) THEN TO_NUMBER(?)';
+                $bindings[] = (int)$id;  
+                $bindings[] = $seq++;     
             }
+            $inPlaceholders = implode(',', array_fill(0, count($ids), 'TO_NUMBER(?)'));
+            $sql = 'UPDATE mp_route_places SET sequence_no = CASE route_place_id ' . implode(' ', $cases) . ' END '
+                 . 'WHERE route_id = TO_NUMBER(?) AND route_place_id IN (' . $inPlaceholders . ')';
+
+        
+            $bindings[] = (int)$route->route_id;
+            foreach ($ids as $id) { $bindings[] = (int)$id; }
+
+            DB::statement($sql, $bindings);
         });
         return response()->json(['message' => 'Reordered']);
     }
