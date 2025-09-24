@@ -12,12 +12,16 @@
 
 
 
+                 @if (function_exists('canMenu') ? canMenu('dashboard') : true)
                  <li class="nav-item">
                      <a href="/backoffice" class="nav-link {{ request()->is('backoffice') ? 'active' : '' }}">
                          <i class="nav-icon ti ti-dashboard"></i>
                          <p>แดชบอร์ด</p>
                      </a>
                  </li>
+                 @endif
+
+                 @if (function_exists('canMenu') ? canMenu('user_manage') : true)
                  <li class="nav-item">
                      <a href="/backoffice/users"
                          class="nav-link {{ request()->is('backoffice/users*') ? 'active' : '' }}">
@@ -25,34 +29,52 @@
                          <p>จัดการผู้ใช้</p>
                      </a>
                  </li>
+                 @endif
 
+                @if (function_exists('canMenu') ? canMenu('menu_manage') : true)
                 <li class="nav-item">
                     <a href="/backoffice/menus" class="nav-link {{ request()->is('backoffice/menus*') ? 'active' : '' }}">
                         <i class="nav-icon ti ti-menu-2"></i>
                         <p>เมนู</p>
                     </a>
                 </li>
+                @endif
 
+                @if (function_exists('canMenu') ? canMenu('department_position_manage') : true)
                 <li class="nav-item">
                     <a href="/backoffice/org" class="nav-link {{ (request()->is('backoffice/org') || request()->is('backoffice/departments*') || request()->is('backoffice/positions*')) ? 'active' : '' }}">
                         <i class="nav-icon ti ti-hierarchy-3"></i>
                         <p>จัดการแผนก & ตำแหน่ง</p>
                     </a>
                 </li>
+                @endif
 
+                @if (function_exists('canMenu') ? canMenu('employee_manage') : true)
                 <li class="nav-item">
                     <a href="/backoffice/employees" class="nav-link {{ request()->is('backoffice/employees*') ? 'active' : '' }}">
                         <i class="nav-icon ti ti-user-cog"></i>
                         <p>พนักงาน</p>
                     </a>
                 </li>
+                @endif
 
+                @if (function_exists('canMenu') ? canMenu('vehicle_vehicle_type_manage') : true)
+                <li class="nav-item">
+                    <a href="/backoffice/vehicles" class="nav-link {{ request()->is('backoffice/vehicles') || request()->is('backoffice/vehicle-types*') || request()->is('backoffice/vehicles*') ? 'active' : '' }}">
+                        <i class="nav-icon ti ti-car"></i>
+                        <p>รถ & ประเภทรถ</p>
+                    </a>
+                </li>
+                @endif
+
+                @if (function_exists('canMenu') ? canMenu('routes_places_manage') : true)
                 <li class="nav-item">
                     <a href="/backoffice/routes-places" class="nav-link {{ request()->is('backoffice/routes-places') ? 'active' : '' }}">
                         <i class="nav-icon ti ti-road"></i>
                         <p>เส้นทาง & จุดรับ–ส่ง</p>
                     </a>
                 </li>
+                @endif
 
                  {{-- <li class="nav-item">
                      <a href="#" class="nav-link">

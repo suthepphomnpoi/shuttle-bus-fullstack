@@ -18,10 +18,11 @@
             @endphp
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
 
+                @if (Auth::guard('employee')->check())
                 <li class="nav-item mt-1">
-                    <a class="nav-link"
-                        href="/backoffice">เข้าสู่ Back Office</a>
+                    <a class="nav-link" href="/backoffice">เข้าสู่ Back Office</a>
                 </li>
+                @endif
 
                 <li class="nav-item dropdown dropdown-hover">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
@@ -78,11 +79,14 @@
 
         <ul class="navbar-nav justify-content-end flex-grow-1">
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('backoffice') ? 'active' : '' }}" href="/backoffice">เข้าสู่
-                    Back Office</a>
-            </li>
-            
+            @if (auth()->guard('employee')->check())
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('backoffice') ? 'active' : '' }}"
+                        href="/backoffice">เข้าสู่
+                        Back Office</a>
+                </li>
+            @endif
+
             <li>
                 <hr class="dropdown-divider">
             </li>

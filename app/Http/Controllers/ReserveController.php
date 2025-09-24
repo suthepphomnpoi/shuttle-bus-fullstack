@@ -9,10 +9,9 @@ class ReserveController extends Controller
 {
     public function searchListPage()
     {
-        if (!Auth::check()) {
+        if (!Auth::check() && !Auth::guard('employee')->check()) {
             return redirect('/auth/users/login');
         }
-        
 
         return view('reserve.search-list');
     }

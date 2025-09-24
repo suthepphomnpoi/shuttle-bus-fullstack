@@ -98,6 +98,9 @@ class MenuController extends Controller
         if (!is_array($menuIds)) $menuIds = [];
         $menuIds = array_map('intval', $menuIds);
         $pos->menus()->sync($menuIds);
+        if (function_exists('bumpMenuAccessVersion')) {
+            bumpMenuAccessVersion();
+        }
         return response()->json(['message' => 'Saved']);
     }
 }

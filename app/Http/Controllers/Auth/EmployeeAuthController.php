@@ -24,7 +24,7 @@ class EmployeeAuthController extends Controller
             'password.required' => 'กรุณากรอกรหัสผ่าน',
         ]);
 
-        if (Auth::guard('employee')->attempt($credentials, true)) {
+        if (Auth::guard('employee')->attempt($credentials, false)) {
             $request->session()->regenerate();
             return response()->json([
                 'success' => true,

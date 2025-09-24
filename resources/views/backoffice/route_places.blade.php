@@ -161,7 +161,7 @@
                         order: ids
                     }, () => {
                         table.ajax.reload(null, false);
-                        showSwalSuccess('จัดลำดับสำเร็จ');
+
                     }).fail(xhr => {
                         showSwalError(xhr.responseJSON?.message || 'Error');
                         table.ajax.reload(null, false);

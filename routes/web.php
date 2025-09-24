@@ -12,6 +12,8 @@ use App\Http\Controllers\BackOffice\MenuController;
 use App\Http\Controllers\BackOffice\RouteController;
 use App\Http\Controllers\BackOffice\PlaceController;
 use App\Http\Controllers\BackOffice\RoutePlaceController;
+use App\Http\Controllers\BackOffice\VehicleTypeController;
+use App\Http\Controllers\BackOffice\VehicleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ReserveController::class, 'searchListPage']);
@@ -37,16 +39,21 @@ Route::middleware('guest')->group(function () {
 });
 
 
-Route::middleware(['auth:web,employee'])->group(function () {
+Route::middleware('useremp.auth')->group(function () {
     Route::get('/auth/users/logout', [UserAuthController::class, 'logout']);
 });
 
 
-Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function () {
-    Route::get('/', [DashboardController::class, 'dashboardPage']);
-    Route::view('/org', 'backoffice.org');
+Route::middleware('employee.auth')->group(function() {
+     Route::get('auth/employees/logout', [EmployeeAuthController::class, 'logout']);
 
-    Route::prefix('users')->group(function () {
+    Route::prefix('backoffice')->group(function () {
+   
+
+    Route::get('/', [DashboardController::class, 'dashboardPage'])->middleware('position.menu:dashboard');
+    Route::view('/org', 'backoffice.org')->middleware('position.menu:department_position_manage');
+
+    Route::prefix('users')->middleware('position.menu:user_manage')->group(function () {
         Route::get('/', [UserController::class, 'usersPage']);
         Route::get('/data', [UserController::class, 'data']);
         Route::get('/{id}', [UserController::class, 'show']);
@@ -55,7 +62,7 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
         Route::delete('/{id}', [UserController::class, 'destroy']);
     });
 
-    Route::prefix('departments')->group(function () {
+    Route::prefix('departments')->middleware('position.menu:department_position_manage')->group(function () {
         Route::get('/list', [DepartmentController::class, 'list']);
         Route::get('/data', [DepartmentController::class, 'data']);
         Route::get('/{id}', [DepartmentController::class, 'show']);
@@ -64,7 +71,7 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
         Route::delete('/{id}', [DepartmentController::class, 'destroy']);
     });
 
-    Route::prefix('positions')->group(function () {
+    Route::prefix('positions')->middleware('position.menu:department_position_manage')->group(function () {
         Route::get('/list', [PositionController::class, 'list']);
         Route::get('/data', [PositionController::class, 'data']);
         Route::get('/{id}', [PositionController::class, 'show']);
@@ -73,7 +80,7 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
         Route::delete('/{id}', [PositionController::class, 'destroy']);
     });
 
-    Route::prefix('employees')->group(function () {
+    Route::prefix('employees')->middleware('position.menu:employee_manage')->group(function () {
         Route::view('/', 'backoffice.employees');
         Route::get('/data', [EmployeeController::class, 'data']);
         Route::get('/{id}', [EmployeeController::class, 'show']);
@@ -83,7 +90,7 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
     });
 
     // Menus
-    Route::prefix('menus')->group(function () {
+    Route::prefix('menus')->middleware('position.menu:menu_manage')->group(function () {
         Route::view('/', 'backoffice.menus');
         Route::get('/data', [MenuController::class, 'data']);
         Route::get('/all', [MenuController::class, 'listAll']);
@@ -94,14 +101,17 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
     });
 
     // Position access to menus
-    Route::get('positions/{positionId}/menus', [MenuController::class, 'positionAccess']);
-    Route::post('positions/{positionId}/menus', [MenuController::class, 'savePositionAccess']);
+    Route::get('positions/{positionId}/menus', [MenuController::class, 'positionAccess'])->middleware('position.menu:menu_manage');
+    Route::post('positions/{positionId}/menus', [MenuController::class, 'savePositionAccess'])->middleware('position.menu:menu_manage');
 
     // Routes & Places combined page
-    Route::view('/routes-places', 'backoffice.routes_places');
+    Route::view('/routes-places', 'backoffice.routes_places')->middleware('position.menu:routes_places_manage');
+
+    // Vehicles & Types combined page
+    Route::view('/vehicles', 'backoffice.vehicles')->middleware('position.menu:vehicle_vehicle_type_manage');
 
     // Routes CRUD
-    Route::prefix('routes')->group(function(){
+    Route::prefix('routes')->middleware('position.menu:routes_places_manage')->group(function () {
         Route::get('/data', [RouteController::class, 'data']);
         Route::get('/{id}', [RouteController::class, 'show']);
         Route::post('/', [RouteController::class, 'store']);
@@ -109,7 +119,9 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
         Route::delete('/{id}', [RouteController::class, 'destroy']);
 
         // page to manage route places
-        Route::get('/{route}/route-places-page', function($route){ return view('backoffice.route_places'); });
+        Route::get('/{route}/route-places-page', function ($route) {
+            return view('backoffice.route_places');
+        });
 
         // Route Places under specific route
         Route::get('/{route}/route-places', [RoutePlaceController::class, 'data']);
@@ -120,7 +132,7 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
     });
 
     // Places CRUD
-    Route::prefix('places')->group(function(){
+    Route::prefix('places')->middleware('position.menu:routes_places_manage')->group(function () {
         Route::get('/list', [PlaceController::class, 'list']);
         Route::get('/data', [PlaceController::class, 'data']);
         Route::get('/{id}', [PlaceController::class, 'show']);
@@ -128,4 +140,25 @@ Route::middleware(['auth:web,employee'])->prefix('backoffice')->group(function (
         Route::put('/{id}', [PlaceController::class, 'update']);
         Route::delete('/{id}', [PlaceController::class, 'destroy']);
     });
+
+    // Vehicle Types CRUD
+    Route::prefix('vehicle-types')->middleware('position.menu:vehicle_vehicle_type_manage')->group(function(){
+        Route::get('/list', [VehicleTypeController::class, 'list']);
+        Route::get('/data', [VehicleTypeController::class, 'data']);
+        Route::get('/{id}', [VehicleTypeController::class, 'show']);
+        Route::post('/', [VehicleTypeController::class, 'store']);
+        Route::put('/{id}', [VehicleTypeController::class, 'update']);
+        Route::delete('/{id}', [VehicleTypeController::class, 'destroy']);
+    });
+
+    // Vehicles CRUD
+    Route::prefix('vehicles')->middleware('position.menu:vehicle_vehicle_type_manage')->group(function(){
+        Route::get('/data', [VehicleController::class, 'data']);
+        Route::get('/{id}', [VehicleController::class, 'show']);
+        Route::post('/', [VehicleController::class, 'store']);
+        Route::put('/{id}', [VehicleController::class, 'update']);
+        Route::delete('/{id}', [VehicleController::class, 'destroy']);
+    });
+});
+
 });
