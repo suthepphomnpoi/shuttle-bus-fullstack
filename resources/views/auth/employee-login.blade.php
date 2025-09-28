@@ -94,9 +94,9 @@
                 .done(function(res) {
                     window.location.href = '/';
                 })
-                .fail(function(xhr) {
+                .fail(function(err) {
                     endBtnLoading($btn[0]);
-                    alert(xhr.responseJSON.message);
+                    alert(err.responseJSON.message);
                 })
 
         });

@@ -211,6 +211,7 @@
                     loadAllPlaces();
                     modal.show();
                 });
+                
                 $('#routePlaceTable').on('click', '.btn-edit', function() {
                     const id = $(this).data('id'); // fetch row data
                     const row = table.row('#rp_' + id).data();
@@ -223,13 +224,20 @@
 
                 $('#btnSaveRoutePlace').on('click', function() {
                     if (!$form.valid()) return;
+
                     const id = $('#route_place_id').val();
+
+
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
+
                     const payload = {
                         place_id: $('#rp_place_id').val(),
                         duration_min: $('#rp_duration_min').val()
                     };
+
+
                     $.ajax({
                         url: id ? `{{ url('backoffice/routes') }}/${routeId}/route-places/${id}` :
                             `{{ url('backoffice/routes') }}/${routeId}/route-places`,

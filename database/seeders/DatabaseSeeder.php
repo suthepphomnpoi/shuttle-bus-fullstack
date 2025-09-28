@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -46,6 +49,7 @@ class DatabaseSeeder extends Seeder
                 ['name' => 'Employee', 'created_at' => DB::raw('SYSDATE')],
             ]);
         }
+        $adminPosId = (int) (DB::table('mp_positions')->where('name', 'Admin')->value('position_id') ?? 1);
         $employeePosId = (int) (DB::table('mp_positions')->where('name', 'Employee')->value('position_id') ?? 2);
 
         // ===== Step 3: Users & Employees =====
@@ -81,20 +85,226 @@ class DatabaseSeeder extends Seeder
                     'last_name'     => 'Test',
                     'gender'        => 'M',
                     'dept_id'       => $deptId,         // IT Department
-                    'position_id'   => $employeePosId,  // Employee
+                    'position_id'   => $employeePosId,  // เริ่มต้นเป็น Employee (จะอัปเป็น Admin ทีหลังทั้งหมด)
                     'created_at'    => DB::raw('SYSDATE'),
                 ]);
             }
         }
 
-        // (เลือกได้) ตั้งใครสักคนเป็น Admin ใน employees/positions
-        // เช่น promote อีเมลลำดับแรกให้เป็น Admin
-        $adminEmail = $emails[0] ?? null;
-        if ($adminEmail) {
-            $adminPosId = (int) (DB::table('mp_positions')->where('name', 'Admin')->value('position_id') ?? 1);
-            DB::table('mp_employees')
-                ->where('email', $adminEmail)
-                ->update(['position_id' => $adminPosId]);
+        // ===== Step 4: Seed menus (ถ้ายังไม่มี) =====
+        $menus = [
+            ['key_name' => 'dashboard',                    'name' => 'Dashboard'],
+            ['key_name' => 'user_manage',                  'name' => 'ผู้ใช้งาน (Users)'],
+            ['key_name' => 'department_position_manage',   'name' => 'แผนก & ตำแหน่ง'],
+            ['key_name' => 'employee_manage',              'name' => 'พนักงาน'],
+            ['key_name' => 'menu_manage',                  'name' => 'เมนู & สิทธิ์เข้าถึง'],
+            ['key_name' => 'routes_places_manage',         'name' => 'เส้นทาง & สถานที่'],
+            ['key_name' => 'vehicle_vehicle_type_manage',  'name' => 'รถ & ประเภทรถ'],
+            ['key_name' => 'trips_manage',                 'name' => 'รอบรถ (Trips)'],
+        ];
+        foreach ($menus as $m) {
+            $exists = DB::table('mp_menus')->where('key_name', $m['key_name'])->exists();
+            if (!$exists) {
+                DB::table('mp_menus')->insert([
+                    'key_name'   => $m['key_name'],
+                    'name'       => $m['name'],
+                    'created_at' => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        // ===== Step 5: ตั้งพนักงานทั้งหมดเป็นตำแหน่ง Admin =====
+        DB::table('mp_employees')->update(['position_id' => $adminPosId]);
+
+        // ===== Step 6: Grant สิทธิ์เมนูทั้งหมดให้ตำแหน่ง Admin =====
+        $menuIds = DB::table('mp_menus')->pluck('menu_id')->map(fn($v)=>(int)$v)->all();
+        // ลบ mapping เดิมของ Admin ออกก่อน แล้วค่อยใส่ใหม่ทั้งหมด
+        DB::table('mp_position_menus')->where('position_id', $adminPosId)->delete();
+        $rows = [];
+        foreach ($menuIds as $mid) {
+            $rows[] = [ 'position_id' => $adminPosId, 'menu_id' => $mid ];
+        }
+        if (!empty($rows)) {
+            // insert เป็นชุด
+            foreach (array_chunk($rows, 100) as $chunk) {
+                DB::table('mp_position_menus')->insert($chunk);
+            }
+        }
+
+        // ===== Step 6.5: Vehicle Types (ถ้ายังไม่มี) =====
+        $vehicleTypes = [
+            ['name' => 'Van'],
+            ['name' => 'Minibus'],
+            ['name' => 'Bus'],
+        ];
+        foreach ($vehicleTypes as $vt) {
+            $exists = DB::table('mp_vehicle_types')->where('name', $vt['name'])->exists();
+            if (!$exists) {
+                DB::table('mp_vehicle_types')->insert([
+                    'name' => $vt['name'],
+                    'created_at' => DB::raw('SYSDATE'),
+                    'updated_at' => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        $vtIds = DB::table('mp_vehicle_types')->pluck('vehicle_type_id', 'name');
+
+        // ===== Step 6.6: Vehicles (กันซ้ำด้วยป้ายทะเบียน) =====
+        $vehicles = [
+            ['license_plate' => 'VAN-2001', 'vehicle_type' => 'Van',    'capacity' => 12, 'description' => 'Passenger van 12 seats'],
+            ['license_plate' => 'BUS-1001', 'vehicle_type' => 'Bus',    'capacity' => 40, 'description' => 'Full size bus 40 seats'],
+            ['license_plate' => 'MB-3001',  'vehicle_type' => 'Minibus','capacity' => 20, 'description' => 'Mini bus 20 seats'],
+        ];
+        foreach ($vehicles as $v) {
+            if (!DB::table('mp_vehicles')->where('license_plate', $v['license_plate'])->exists()) {
+                $typeId = $vtIds[$v['vehicle_type']] ?? null;
+                if ($typeId) {
+                    DB::table('mp_vehicles')->insert([
+                        'vehicle_type_id' => (int)$typeId,
+                        'capacity'        => (int)$v['capacity'],
+                        'license_plate'   => $v['license_plate'],
+                        'description'     => $v['description'],
+                        'status'          => 'active',
+                        'created_at'      => DB::raw('SYSDATE'),
+                        'updated_at'      => DB::raw('SYSDATE'),
+                    ]);
+                }
+            }
+        }
+
+        // ===== Step 6.7: Routes (กันซ้ำด้วยชื่อ) =====
+        $routes = [
+            ['name' => 'Campus Loop'],
+            ['name' => 'Dorm Shuttle'],
+            ['name' => 'Airport Express'],
+        ];
+        foreach ($routes as $r) {
+            if (!DB::table('mp_routes')->where('name', $r['name'])->exists()) {
+                DB::table('mp_routes')->insert([
+                    'name'       => $r['name'],
+                    'created_at' => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        // ===== Step 6.7.1: Places (กันซ้ำด้วยชื่อ) =====
+        $places = [
+            ['name' => 'Main Gate'],
+            ['name' => 'Library'],
+            ['name' => 'Dorm A'],
+            ['name' => 'Dorm B'],
+            ['name' => 'Engineering Building'],
+            ['name' => 'Cafeteria'],
+            ['name' => 'Airport Terminal'],
+            ['name' => 'Bus Station'],
+        ];
+        foreach ($places as $p) {
+            if (!DB::table('mp_places')->where('name', $p['name'])->exists()) {
+                DB::table('mp_places')->insert([
+                    'name'       => $p['name'],
+                    'created_at' => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        // ===== Step 6.7.2: Route Places mapping (idempotent, with sequence/duration) =====
+        $routeMap = DB::table('mp_routes')->pluck('route_id', 'name');
+        $placeMap = DB::table('mp_places')->pluck('place_id', 'name');
+
+        $routePlaces = [
+            'Campus Loop' => [
+                ['place' => 'Main Gate', 'seq' => 1, 'dur' => 0],
+                ['place' => 'Engineering Building', 'seq' => 2, 'dur' => 7],
+                ['place' => 'Library', 'seq' => 3, 'dur' => 5],
+                ['place' => 'Cafeteria', 'seq' => 4, 'dur' => 4],
+                ['place' => 'Main Gate', 'seq' => 5, 'dur' => 6],
+            ],
+            'Dorm Shuttle' => [
+                ['place' => 'Main Gate', 'seq' => 1, 'dur' => 0],
+                ['place' => 'Dorm A', 'seq' => 2, 'dur' => 8],
+                ['place' => 'Dorm B', 'seq' => 3, 'dur' => 5],
+                ['place' => 'Main Gate', 'seq' => 4, 'dur' => 7],
+            ],
+            'Airport Express' => [
+                ['place' => 'Main Gate', 'seq' => 1, 'dur' => 0],
+                ['place' => 'Bus Station', 'seq' => 2, 'dur' => 20],
+                ['place' => 'Airport Terminal', 'seq' => 3, 'dur' => 25],
+            ],
+        ];
+
+        foreach ($routePlaces as $routeName => $stops) {
+            $rid = $routeMap[$routeName] ?? null;
+            if (!$rid) continue;
+
+            foreach ($stops as $s) {
+                $pid = $placeMap[$s['place']] ?? null;
+                if (!$pid) continue;
+
+                // unique by (route_id, sequence_no)
+                $exists = DB::table('mp_route_places')
+                    ->where('route_id', $rid)
+                    ->where('sequence_no', (int)$s['seq'])
+                    ->exists();
+                if ($exists) continue;
+
+                DB::table('mp_route_places')->insert([
+                    'route_id'    => (int)$rid,
+                    'place_id'    => (int)$pid,
+                    'sequence_no' => (int)$s['seq'],
+                    'duration_min'=> (int)$s['dur'],
+                ]);
+            }
+        }
+
+        // ===== Step 6.8: Sample Trips (idempotent) =====
+        $today = date('Y-m-d');
+        $routeIds   = DB::table('mp_routes')->pluck('route_id')->map(fn($v) => (int)$v)->values()->all();
+        $vehicleIds = DB::table('mp_vehicles')->pluck('vehicle_id')->map(fn($v) => (int)$v)->values()->all();
+        $driverIds  = DB::table('mp_employees')->orderBy('employee_id')->limit(5)->pluck('employee_id')->map(fn($v) => (int)$v)->values()->all();
+
+        if (!empty($routeIds) && !empty($vehicleIds) && !empty($driverIds)) {
+            // สร้าง 3 รอบวันนี้ 08:00, 09:00, 10:00
+            $times = ['08:00','09:00','10:00'];
+            foreach ($times as $i => $t) {
+                $routeId   = $routeIds[$i % count($routeIds)];
+                $vehicleId = $vehicleIds[$i % count($vehicleIds)];
+                $driverId  = $driverIds[$i % count($driverIds)];
+
+                // ข้ามถ้ามีซ้ำ (ตาม unique constraint)
+                $exists = DB::table('mp_trips')
+                    ->where('service_date', $today)
+                    ->where('depart_time', $t)
+                    ->where('vehicle_id', $vehicleId)
+                    ->exists();
+                if ($exists) continue;
+
+                DB::table('mp_trips')->insert([
+                    'route_id'         => $routeId,
+                    'vehicle_id'       => $vehicleId,
+                    'driver_id'        => $driverId,
+                    'service_date'     => $today, // Oracle oci8 รับ YYYY-MM-DD
+                    'depart_time'      => $t,
+                    'estimated_minutes'=> 45,
+                    'capacity'         => (int) (DB::table('mp_vehicles')->where('vehicle_id', $vehicleId)->value('capacity') ?? 20),
+                    'reserved_seats'   => 0,
+                    'status'           => 'scheduled',
+                    'notes'            => null,
+                    'created_at'       => DB::raw('SYSDATE'),
+                    'updated_at'       => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        // ===== Step 7: Invalidate menu access cache/version =====
+        if (function_exists('bumpMenuAccessVersion')) {
+            bumpMenuAccessVersion();
+        } else {
+            try {
+                Cache::increment('menu_access_version');
+            } catch (\Throwable $e) {
+                Cache::forever('menu_access_version', 1);
+            }
         }
     }
 }

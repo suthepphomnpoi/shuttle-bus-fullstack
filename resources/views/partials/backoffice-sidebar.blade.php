@@ -75,6 +75,15 @@
                     </a>
                 </li>
                 @endif
+                
+                @if (function_exists('canMenu') ? canMenu('trips_manage') : true)
+                <li class="nav-item">
+                    <a href="/backoffice/trips" class="nav-link {{ request()->is('backoffice/trips*') ? 'active' : '' }}">
+                        <i class="nav-icon ti ti-bus"></i>
+                        <p>รอบรถ (Trips)</p>
+                    </a>
+                </li>
+                @endif
 
                  {{-- <li class="nav-item">
                      <a href="#" class="nav-link">

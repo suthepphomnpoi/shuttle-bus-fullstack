@@ -245,8 +245,11 @@
                 });
 
                 $('#empTable').on('click', '.btn-edit', function() {
+
                     const id = $(this).data('id');
+
                     $.get(`{{ url('backoffice/employees') }}/${id}`, (res) => {
+
                         $('#employee_id').val(res.employee_id);
                         $('#emp_email').val(res.email);
                         $('#emp_first_name').val(res.first_name);
@@ -260,15 +263,21 @@
                             $('#emp_position_id').val(res.position_id);
                             modal.show();
                         });
+
+
+                        
                     });
                 });
 
                 $('#btnSaveEmp').on('click', function() {
+
                     if (!$form.valid()) return;
+
                     const id = $('#employee_id').val();
                     const method = id ? 'PUT' : 'POST';
                     const url = id ? `{{ url('backoffice/employees') }}/${id}` :
                         `{{ url('backoffice/employees') }}`;
+
                     const payload = {
                         email: $('#emp_email').val(),
                         first_name: $('#emp_first_name').val(),
@@ -278,17 +287,26 @@
                         position_id: $('#emp_position_id').val(),
                         password: $('#emp_password').val()
                     };
+
+
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
                     $.ajax({
                         url,
                         type: method,
                         data: payload,
+
                         success: function() {
+
                             modal.hide();
                             table.ajax.reload(null, false);
+
+                    
                             showSwalSuccess('บันทึกสำเร็จ');
+
                         },
+
                         error: function(xhr) {
                             if (xhr.status === 422) {
                                 const errs = xhr.responseJSON.errors || {};
@@ -301,6 +319,7 @@
                         complete: function() {
                             endBtnLoading(btn);
                         }
+
                     });
                 });
 
@@ -313,7 +332,9 @@
                             type: 'DELETE',
                             success: function() {
                                 table.ajax.reload(null, false);
+
                                 showSwalSuccess('ลบข้อมูลสำเร็จ');
+
                             },
                             error: function() {
                                 showSwalError('เกิดข้อผิดพลาด');

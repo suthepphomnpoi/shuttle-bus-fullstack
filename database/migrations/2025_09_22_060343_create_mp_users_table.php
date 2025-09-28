@@ -22,7 +22,7 @@ return new class extends Migration
             $table->dateTime('created_at')->default(DB::raw('SYSDATE'));
         });
 
-        DB::statement("ALTER TABLE mp_users ADD CONSTRAINT mp_ck_users_gender CHECK (gender IN ('M','F'))");
+        DB::statement("ALTER TABLE mp_users ADD CONSTRAINT mp_ck_users_gender CHECK (gender IN ('M','F', 'N'))");
     }
 
     /**

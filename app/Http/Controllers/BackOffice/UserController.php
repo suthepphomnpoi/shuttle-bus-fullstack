@@ -49,7 +49,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:100', 'unique:mp_users,email'],
             'first_name' => ['required', 'max:50'],
             'last_name' => ['required', 'max:50'],
-            'gender' => ['required', Rule::in(['M', 'F'])],
+            'gender' => ['required', Rule::in(['M', 'F', 'N'])],
             'password' => ['required', 'min:6'],
         ], [
             'email.required' => 'กรุณากรอกอีเมล',
@@ -66,6 +66,9 @@ class UserController extends Controller
             'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
         ]);
 
+
+
+
         $user = MpUser::create([
             'email' => $validated['email'],
             'first_name' => $validated['first_name'],
@@ -74,7 +77,8 @@ class UserController extends Controller
             'password_hash' => Hash::make($validated['password']),
         ]);
 
-        return response()->json(['message' => 'Created', 'id' => $user->user_id]);
+
+        return response()->json(['success' => true, 'message' => 'Created', 'id' => $user->user_id]);
     }
 
     public function update($id, Request $request)
@@ -84,7 +88,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'max:100', Rule::unique('mp_users', 'email')->ignore($user->user_id, 'user_id')],
             'first_name' => ['required', 'max:50'],
             'last_name' => ['required', 'max:50'],
-            'gender' => ['required', Rule::in(['M', 'F'])],
+            'gender' => ['required', Rule::in(['M', 'F', 'N'])],
             'password' => ['nullable', 'min:6'],
         ], [
             'email.required' => 'กรุณากรอกอีเมล',
@@ -109,13 +113,15 @@ class UserController extends Controller
         }
         $user->save();
 
-        return response()->json(['message' => 'Updated']);
+        return response()->json(['success' => true, 'message' => 'Updated']);
     }
 
     public function destroy($id)
     {
         $user = MpUser::findOrFail($id);
+
         $user->delete();
-        return response()->json(['message' => 'Deleted']);
+
+        return response()->json(['success' => true, 'message' => 'Deleted']);
     }
 }

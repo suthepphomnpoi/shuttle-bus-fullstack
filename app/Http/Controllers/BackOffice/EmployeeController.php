@@ -52,6 +52,7 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $emp = MpEmployee::findOrFail($id);
+
         return response()->json($emp);
     }
 
@@ -85,6 +86,8 @@ class EmployeeController extends Controller
             'password.required' => 'กรุณากรอกรหัสผ่าน',
             'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
         ]);
+
+
         $emp = MpEmployee::create([
             'email' => $validated['email'],
             'first_name' => $validated['first_name'],
@@ -94,12 +97,16 @@ class EmployeeController extends Controller
             'position_id' => $validated['position_id'],
             'password_hash' => Hash::make($validated['password']),
         ]);
+
+
         return response()->json(['message' => 'Created','id' => $emp->employee_id]);
     }
 
     public function update($id, Request $request)
     {
         $emp = MpEmployee::findOrFail($id);
+
+
         $validated = $request->validate([
             'email' => ['required','email','max:100', Rule::unique('mp_employees','email')->ignore($emp->employee_id, 'employee_id')],
             'first_name' => ['required','max:50'],
@@ -127,23 +134,36 @@ class EmployeeController extends Controller
             'position_id.exists' => 'ตำแหน่งที่เลือกไม่มีอยู่ในระบบ',
             'password.min' => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
         ]);
+
+
+
         $emp->email = $validated['email'];
         $emp->first_name = $validated['first_name'];
         $emp->last_name = $validated['last_name'];
         $emp->gender = $validated['gender'];
         $emp->dept_id = $validated['dept_id'];
         $emp->position_id = $validated['position_id'];
+
+
+
         if (!empty($validated['password'])) {
             $emp->password_hash = Hash::make($validated['password']);
         }
+
+        
         $emp->save();
+
+
+        
         return response()->json(['message' => 'Updated']);
     }
 
     public function destroy($id)
     {
         $emp = MpEmployee::findOrFail($id);
+
         $emp->delete();
+
         return response()->json(['message' => 'Deleted']);
     }
 }

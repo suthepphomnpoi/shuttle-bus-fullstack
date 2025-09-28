@@ -194,19 +194,41 @@
                     deptModal.show();
                 });
                 $('#deptTable').on('click', '.btn-edit-dept', function() {
+
                     const id = $(this).data('id');
+
+
                     $.get(`{{ url('backoffice/departments') }}/${id}`, (res) => {
+
+
                         $('#dept_id').val(res.dept_id);
                         $('#dept_name').val(res.name);
                         $('#deptModalTitle').text('แก้ไขแผนก');
+
+
+
                         deptModal.show();
+
+
                     });
                 });
                 $('#btnSaveDept').on('click', function() {
+
+
                     if (!$deptForm.valid()) return;
+
+
+
                     const id = $('#dept_id').val();
+
+
+
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
+
+
+
                     $.ajax({
                         url: id ? `{{ url('backoffice/departments') }}/${id}` :
                             `{{ url('backoffice/departments') }}`,
@@ -215,8 +237,13 @@
                             name: $('#dept_name').val()
                         },
                         success: function() {
+
                             deptModal.hide();
+
+
                             deptTable.ajax.reload(null, false);
+
+
                             showSwalSuccess('บันทึกสำเร็จ');
                         },
                         error: function(xhr) {
@@ -226,16 +253,28 @@
                             endBtnLoading(btn);
                         }
                     });
+
+
                 });
                 $('#deptTable').on('click', '.btn-delete-dept', function() {
+
+
                     const id = $(this).data('id');
+
+
                     confirmSwal('ยืนยันการลบแผนก?').then((res) => {
+
                         if (!res.isConfirmed) return;
+
+
+
                         $.ajax({
                             url: `{{ url('backoffice/departments') }}/${id}`,
                             type: 'DELETE',
                             success: function() {
+
                                 deptTable.ajax.reload(null, false);
+                                
                                 showSwalSuccess('ลบข้อมูลสำเร็จ');
                             },
                             error: function() {
@@ -335,10 +374,18 @@
                     });
                 });
                 $('#btnSavePos').on('click', function() {
+
                     if (!$posForm.valid()) return;
+
+
                     const id = $('#position_id').val();
+
+
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
+
+                    
                     $.ajax({
                         url: id ? `{{ url('backoffice/positions') }}/${id}` :
                             `{{ url('backoffice/positions') }}`,

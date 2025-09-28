@@ -196,7 +196,10 @@
                 });
                 $('#btnSaveRoute').on('click', function() {
                     if (!$routeForm.valid()) return;
+
                     const id = $('#route_id').val();
+
+                    
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
                     $.ajax({
@@ -307,19 +310,32 @@
                     placeModal.show();
                 });
                 $('#placeTable').on('click', '.btn-edit-place', function() {
+
                     const id = $(this).data('id');
+
+
                     $.get(`{{ url('backoffice/places') }}/${id}`, res => {
                         $('#place_id').val(res.place_id);
                         $('#place_name').val(res.name);
                         $('#placeModalTitle').text('แก้ไขสถานที่');
                         placeModal.show();
                     });
+
+
+
                 });
                 $('#btnSavePlace').on('click', function() {
+
                     if (!$placeForm.valid()) return;
+
+
                     const id = $('#place_id').val();
+
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
+
+
                     $.ajax({
                         url: id ? `{{ url('backoffice/places') }}/${id}` :
                             `{{ url('backoffice/places') }}`,
@@ -329,7 +345,9 @@
                         },
                         success: () => {
                             placeModal.hide();
+
                             placeTable.ajax.reload(null, false);
+
                             showSwalSuccess('บันทึกสำเร็จ');
                         },
                         error: (xhr) => {
@@ -339,14 +357,21 @@
                     });
                 });
                 $('#placeTable').on('click', '.btn-del-place', function() {
+
                     const id = $(this).data('id');
+
+
                     confirmSwal('ยืนยันการลบสถานที่?').then(res => {
+
                         if (!res.isConfirmed) return;
+
+
                         $.ajax({
                             url: `{{ url('backoffice/places') }}/${id}`,
                             type: 'DELETE',
                             success: () => {
                                 placeTable.ajax.reload(null, false);
+
                                 showSwalSuccess('ลบสำเร็จ');
                             },
                             error: () => showSwalError('Error')

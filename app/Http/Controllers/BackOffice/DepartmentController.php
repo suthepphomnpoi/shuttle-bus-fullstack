@@ -35,8 +35,12 @@ class DepartmentController extends Controller
 
     public function show($id)
     {
-        return response()->json(MpDepartment::findOrFail($id));
+        return response()->json(
+            MpDepartment::findOrFail($id)
+        );
     }
+
+
 
     public function store(Request $request)
     {
@@ -47,13 +51,20 @@ class DepartmentController extends Controller
             'name.max' => 'ชื่อแผนกต้องไม่เกิน 100 ตัวอักษร',
             'name.unique' => 'ชื่อแผนกนี้มีอยู่ในระบบแล้ว',
         ]);
+
+
+
         $dept = MpDepartment::create($validated);
+
+
         return response()->json(['message' => 'Created','id' => $dept->dept_id]);
     }
 
     public function update($id, Request $request)
     {
         $dept = MpDepartment::findOrFail($id);
+
+
         $validated = $request->validate([
             'name' => ['required','max:100', Rule::unique('mp_departments','name')->ignore($dept->dept_id, 'dept_id')],
         ], [
@@ -61,14 +72,23 @@ class DepartmentController extends Controller
             'name.max' => 'ชื่อแผนกต้องไม่เกิน 100 ตัวอักษร',
             'name.unique' => 'ชื่อแผนกนี้มีอยู่ในระบบแล้ว',
         ]);
+
+
         $dept->update($validated);
+
+
+        
         return response()->json(['message' => 'Updated']);
     }
 
     public function destroy($id)
     {
+
         $dept = MpDepartment::findOrFail($id);
+
         $dept->delete();
+
+
         return response()->json(['message' => 'Deleted']);
     }
 }

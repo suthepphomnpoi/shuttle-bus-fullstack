@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 
 class MenuController extends Controller
 {
-    // Menus DataTables server-side
+   
     public function data(Request $request)
     {
         $query = MpMenu::query()->select(['menu_id','key_name','name','created_at']);
@@ -26,7 +26,6 @@ class MenuController extends Controller
                 }
             })
             ->order(function($q) use ($request){
-                // DataTables will send order; default to menu_id desc if none
                 if (!$request->has('order')) {
                     $q->orderBy('menu_id','desc');
                 }
@@ -51,13 +50,21 @@ class MenuController extends Controller
             'name.required' => 'กรุณากรอกชื่อเมนู',
             'name.max' => 'ชื่อเมนูต้องไม่เกิน 100 ตัวอักษร',
         ]);
+
+
+
         $menu = MpMenu::create($validated);
+
+
+
         return response()->json(['message' => 'Created','id' => $menu->menu_id]);
     }
 
     public function update($id, Request $request)
     {
         $menu = MpMenu::findOrFail($id);
+
+
         $validated = $request->validate([
             'key_name' => ['required','max:50', Rule::unique('mp_menus','key_name')->ignore($menu->menu_id, 'menu_id')],
             'name' => ['required','max:100'],
@@ -66,15 +73,22 @@ class MenuController extends Controller
             'key_name.max' => 'Key ต้องไม่เกิน 50 ตัวอักษร',
             'key_name.unique' => 'Key นี้ถูกใช้งานแล้ว',
             'name.required' => 'กรุณากรอกชื่อเมนู',
-            'name.max' => 'ชื่อเมนูต้องไม่เกิน 100 ตัวอักษร',
+            'nam
+            e.max' => 'ชื่อเมนูต้องไม่เกิน 100 ตัวอักษร',
         ]);
+
+
+
         $menu->update($validated);
+
+        
         return response()->json(['message' => 'Updated']);
     }
 
     public function destroy($id)
     {
         MpMenu::findOrFail($id)->delete();
+
         return response()->json(['message' => 'Deleted']);
     }
 

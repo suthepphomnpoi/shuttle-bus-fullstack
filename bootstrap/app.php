@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'useremp.auth' => App\Http\Middleware\UserEmpAuth::class,
             'position.menu' => App\Http\Middleware\PositionMenuAccess::class,
             'employee.auth' => App\Http\Middleware\EmployeeAuth::class,
+            'admin.auth' => App\Http\Middleware\AdminAuth::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

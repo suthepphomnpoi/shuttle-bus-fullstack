@@ -60,6 +60,7 @@
                                     <option value="">- เลือก -</option>
                                     <option value="M">ชาย</option>
                                     <option value="F">หญิง</option>
+                                    <option value="N">ไม่ระบุเพศ</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -178,8 +179,8 @@
                         {
                             data: 'gender',
                             name: 'gender',
-                            render: d => d === 'M' ? 'ชาย' : 'หญิง',
-                            width: 80,
+                            render: d => (d === 'M' ? 'ชาย' : (d === 'F' ? 'หญิง' : 'ไม่ระบุเพศ')),
+                            width: 100,
                             className: 'text-center'
                         },
                         {
@@ -235,12 +236,15 @@
                         userModal.show();
                     });
                 });
+                
 
                 $('#btnSave').on('click', function() {
                     if (!$form.valid()) return;
+
                     const id = $('#user_id').val();
                     const method = id ? 'PUT' : 'POST';
                     const url = id ? `{{ url('backoffice/users') }}/${id}` : `{{ url('backoffice/users') }}`;
+
                     const payload = {
                         email: $('#email').val(),
                         first_name: $('#first_name').val(),
@@ -251,6 +255,7 @@
 
                     const btn = this;
                     startBtnLoading(btn, 'กำลังบันทึก...');
+
                     $.ajax({
                         url,
                         type: method,
@@ -260,6 +265,8 @@
                             table.ajax.reload(null, false);
                             showSwalSuccess('บันทึกสำเร็จ');
                         },
+
+                        // error สที่ส่งมาจาก server
                         error: function(xhr) {
                             if (xhr.status === 422) {
                                 const errs = xhr.responseJSON.errors || {};
@@ -284,6 +291,7 @@
                             type: 'DELETE',
                             success: function() {
                                 table.ajax.reload(null, false);
+
                                 showSwalSuccess('ลบข้อมูลสำเร็จ');
                             },
                             error: function() {

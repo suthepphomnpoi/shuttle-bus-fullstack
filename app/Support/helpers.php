@@ -23,10 +23,13 @@ if (!function_exists('canMenu')) {
             return false;
         }
 
-        $user = Auth::guard($guard)->user();
-        $empId = $user->employee_id ?? null;
-        $posId = $user->position_id ?? null;
-        if (!$empId || !$posId) return false;
+    $user = Auth::guard($guard)->user();
+    $empId = $user->employee_id ?? null;
+    if (!$empId) return false;
+
+    // Always fetch the latest position_id from DB to avoid stale session data
+    $posId = DB::table('mp_employees')->where('employee_id', $empId)->value('position_id');
+    if (!$posId) return false;
 
         $version = Cache::get('menu_access_version', 1);
         $cacheKey = "menu_access:emp:{$empId}:v{$version}";

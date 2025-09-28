@@ -68,6 +68,11 @@ class PositionController extends Controller
     public function destroy($id)
     {
         $pos = MpPosition::findOrFail($id);
+        // Detach pivot relations first to satisfy FK (mp_position_menus)
+        // This avoids ORA-02292 when a position has menu access mapped.
+        if (method_exists($pos, 'menus')) {
+            $pos->menus()->detach();
+        }
         $pos->delete();
         return response()->json(['message' => 'Deleted']);
     }

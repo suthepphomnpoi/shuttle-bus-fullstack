@@ -65,7 +65,9 @@ class RoutePlaceController extends Controller
     public function update($routeId, $routePlaceId, Request $request)
     {
         $route = MpRoute::findOrFail($routeId);
+
         $rp = MpRoutePlace::where('route_id',$route->route_id)->findOrFail($routePlaceId);
+
         $validated = $request->validate([
             'place_id' => ['required','integer','exists:mp_places,place_id'],
             'duration_min' => ['required','integer'],
@@ -89,6 +91,7 @@ class RoutePlaceController extends Controller
             'place_id' => (int)$validated['place_id'],
             'duration_min' => (int)$validated['duration_min'],
         ]);
+        
         return response()->json(['message' => 'Updated']);
     }
 

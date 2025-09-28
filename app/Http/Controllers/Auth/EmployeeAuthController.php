@@ -24,18 +24,19 @@ class EmployeeAuthController extends Controller
             'password.required' => 'กรุณากรอกรหัสผ่าน',
         ]);
 
+
         if (Auth::guard('employee')->attempt($credentials, false)) {
             $request->session()->regenerate();
             return response()->json([
                 'success' => true,
-                'redirect' => url('/'),
             ]);
+
         }
 
         return response()->json([
             'success' => false,
             'message' => 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
-        ], 422);
+        ], 400);
     }
 
     public function logout()

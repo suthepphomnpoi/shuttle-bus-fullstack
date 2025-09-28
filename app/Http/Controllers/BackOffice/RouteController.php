@@ -37,6 +37,7 @@ class RouteController extends Controller
             'name.max' => 'ชื่อเส้นทางต้องไม่เกิน 100 ตัวอักษร',
             'name.unique' => 'ชื่อเส้นทางนี้มีอยู่ในระบบแล้ว',
         ]);
+        
         $m = MpRoute::create($validated);
         return response()->json(['message' => 'Created','id' => $m->route_id]);
     }
@@ -58,6 +59,10 @@ class RouteController extends Controller
     public function destroy($id)
     {
         $m = MpRoute::findOrFail($id);
+        // Delete children first to satisfy FK (mp_route_places.route_id)
+        if (method_exists($m, 'routePlaces')) {
+            $m->routePlaces()->delete();
+        }
         $m->delete();
         return response()->json(['message' => 'Deleted']);
     }

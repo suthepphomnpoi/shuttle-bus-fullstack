@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('local') || str_contains(config('app.url'), 'loca.lt')) {
-            URL::forceScheme('https'); // บังคับ https
-        }
+        // if (app()->environment('local') || str_contains(config('app.url'), 'loca.lt')) {
+        //     URL::forceScheme('https'); // บังคับ https
+        // }
     }
 }
