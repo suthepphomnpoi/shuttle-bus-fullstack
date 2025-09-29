@@ -61,3 +61,21 @@ if (!function_exists('bumpMenuAccessVersion')) {
         Cache::put('menu_access_version', $current + 1, 60 * 60 * 24);
     }
 }
+
+if (!function_exists('clearMenuAccessCacheFor')) {
+    /**
+     * Clear cached menu codes for a specific employee by incrementing version or forgetting key.
+     * Safer to bump global version to cover all employees when access mappings are broadly changed.
+     */
+    function clearMenuAccessCacheFor(int $employeeId): void
+    {
+        try {
+            // Bump global version so all caches expire; avoids having to compute the exact key.
+            bumpMenuAccessVersion();
+        } catch (\Throwable $e) {
+            // As a fallback, forget likely keys for this employee with current version.
+            $version = Cache::get('menu_access_version', 1);
+            Cache::forget("menu_access:emp:{$employeeId}:v{$version}");
+        }
+    }
+}

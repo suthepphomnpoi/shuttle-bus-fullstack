@@ -141,8 +141,9 @@ class EmployeeController extends Controller
         $emp->first_name = $validated['first_name'];
         $emp->last_name = $validated['last_name'];
         $emp->gender = $validated['gender'];
-        $emp->dept_id = $validated['dept_id'];
-        $emp->position_id = $validated['position_id'];
+    $emp->dept_id = $validated['dept_id'];
+    $oldPositionId = (int) $emp->position_id;
+    $emp->position_id = $validated['position_id'];
 
 
 
@@ -152,6 +153,17 @@ class EmployeeController extends Controller
 
         
         $emp->save();
+
+        // Invalidate menu access cache if position changed
+        if (function_exists('clearMenuAccessCacheFor')) {
+            try {
+                if ($oldPositionId !== (int)$emp->position_id) {
+                    clearMenuAccessCacheFor((int)$emp->employee_id);
+                }
+            } catch (\Throwable $e) {
+                // no-op
+            }
+        }
 
 
         

@@ -188,6 +188,72 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // ===== Step 6.7.1: Places (ถ้ายังไม่มี) =====
+        $places = [
+            'Main Gate', 'Engineering Building', 'Library', 'Dorm A', 'Dorm B', 'Cafeteria', 'Airport', 'City Center', 'Stadium'
+        ];
+        foreach ($places as $pname) {
+            if (!DB::table('mp_places')->where('name', $pname)->exists()) {
+                DB::table('mp_places')->insert([
+                    'name'       => $pname,
+                    'created_at' => DB::raw('SYSDATE'),
+                ]);
+            }
+        }
+
+        // ===== Step 6.7.2: Attach route places with order =====
+        $routeIdsByName = DB::table('mp_routes')->pluck('route_id', 'name');
+        $placeIdsByName = DB::table('mp_places')->pluck('place_id', 'name');
+
+        $routeStops = [
+            'Campus Loop' => [
+                ['Main Gate', 0],
+                ['Engineering Building', 7],
+                ['Library', 5],
+                ['Cafeteria', 6],
+                ['Main Gate', 8],
+            ],
+            'Dorm Shuttle' => [
+                ['Dorm A', 0],
+                ['Dorm B', 6],
+                ['Main Gate', 10],
+                ['Dorm A', 10],
+            ],
+            'Airport Express' => [
+                ['Main Gate', 0],
+                ['City Center', 25],
+                ['Airport', 30],
+            ],
+        ];
+
+        foreach ($routeStops as $routeName => $stops) {
+            $rid = $routeIdsByName[$routeName] ?? null;
+            if (!$rid) continue;
+
+            // ถ้ายังไม่มี route_places ของ route นี้ ค่อยสร้าง (idempotent)
+            $hasAny = DB::table('mp_route_places')->where('route_id', $rid)->exists();
+            if ($hasAny) continue;
+
+            $seq = 1;
+            $rows = [];
+            foreach ($stops as [$pname, $dur]) {
+                $pid = $placeIdsByName[$pname] ?? null;
+                if (!$pid) continue;
+                $rows[] = [
+                    'route_id'    => (int)$rid,
+                    'place_id'    => (int)$pid,
+                    'sequence_no' => $seq,
+                    'duration_min'=> (int)$dur,
+                ];
+                $seq++;
+            }
+            if (!empty($rows)) {
+                foreach (array_chunk($rows, 100) as $chunk) {
+                    DB::table('mp_route_places')->insert($chunk);
+                }
+            }
+        }
+
         // ===== Step 6.7.1: Places (กันซ้ำด้วยชื่อ) =====
         $places = [
             ['name' => 'Main Gate'],

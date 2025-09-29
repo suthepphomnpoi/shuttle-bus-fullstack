@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ReserveController::class, 'searchListPage']);
 
+// Normalize trailing slashes on common app prefixes to avoid 404 on '/path/'
+Route::redirect('backoffice/', 'backoffice');
+Route::redirect('auth/employees/login/', 'auth/employees/login');
+Route::redirect('auth/drivers/login/', 'auth/drivers/login');
+Route::redirect('auth/users/login/', 'auth/users/login');
+
 
 Route::middleware('guest')->group(function () {
 
@@ -34,6 +40,11 @@ Route::middleware('guest')->group(function () {
 
     Route::prefix('auth')->group(function () {
         Route::prefix('employees')->group(function () {
+            Route::get('login', [EmployeeAuthController::class, 'loginPage']);
+            Route::post('login', [EmployeeAuthController::class, 'login']);
+        });
+        // Alias for drivers login -> re-use employee auth endpoints
+        Route::prefix('drivers')->group(function () {
             Route::get('login', [EmployeeAuthController::class, 'loginPage']);
             Route::post('login', [EmployeeAuthController::class, 'login']);
         });
