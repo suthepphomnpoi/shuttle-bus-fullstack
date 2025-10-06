@@ -14,6 +14,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
+                            <th>รอบ</th>
                             <th>วันที่</th>
                             <th>เวลา</th>
                             <th>เส้นทาง</th>
@@ -39,6 +40,10 @@
                 <div class="modal-body">
                     <form id="tripForm">
                         <input type="hidden" id="trip_id">
+                        <div class="mb-3">
+                            <label class="form-label">รอบ</label>
+                            <input type="number" min="1" class="form-control" id="round_no" name="round_no" placeholder="ปล่อยว่างให้ระบบกำหนดอัตโนมัติ">
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">วันที่</label>
                             <input type="date" class="form-control" id="service_date" name="service_date" required>
@@ -100,6 +105,7 @@
                     ajax: { url: '{{ url('backoffice/trips/data') }}', type: 'GET' },
                     columns: [
                         { data: 'trip_id', width: 60 },
+                        { data: 'round_no', width: 60 },
                         { data: 'service_date' },
                         { data: 'depart_time' },
                         { data: 'route_name' },
@@ -119,7 +125,7 @@
                 function loadInit(selected){
                     $.get(`{{ url('backoffice/trips/init') }}`, res => {
                         const rOpts = (res.routes||[]).map(r=>`<option value="${r.route_id}">${escapeHtml(r.name)}</option>`).join('');
-                        const vOpts = (res.vehicles||[]).map(v=>`<option value="${v.vehicle_id}">${escapeHtml(v.license_plate)}</option>`).join('');
+                        const vOpts = (res.vehicles||[]).map(v=>`<option value="${v.vehicle_id}" data-capacity="${v.capacity ?? ''}">${escapeHtml(v.license_plate)}</option>`).join('');
                         const dOpts = (res.drivers||[]).map(d=>`<option value="${d.employee_id}">${escapeHtml(d.name)}</option>`).join('');
                         $('#route_id').html(`<option value="">-- เลือก --</option>`+rOpts);
                         $('#vehicle_id').html(`<option value="">-- เลือก --</option>`+vOpts);
@@ -128,9 +134,18 @@
                             $('#route_id').val(selected.route_id);
                             $('#vehicle_id').val(selected.vehicle_id);
                             $('#driver_id').val(selected.driver_id);
+                            // Autofill capacity from selected vehicle when editing
+                            const cap = $('#vehicle_id option:selected').data('capacity');
+                            if (cap) $('#capacity').val(cap);
                         }
                     });
                 }
+
+                // When vehicle changes, set capacity from vehicle default
+                $(document).on('change', '#vehicle_id', function(){
+                    const cap = $('#vehicle_id option:selected').data('capacity');
+                    if (cap) $('#capacity').val(cap);
+                });
 
                 $('#btnAddTrip').on('click', ()=>{
                     $('#trip_id').val('');
@@ -146,6 +161,7 @@
                         $('#trip_id').val(res.trip_id);
                         $('#service_date').val(res.service_date?.substring(0,10));
                         $('#depart_time').val(res.depart_time);
+                        $('#round_no').val(res.round_no ?? '');
                         $('#capacity').val(res.capacity);
                         $('#reserved_seats').val(res.reserved_seats ?? 0);
                         $('#status').val(res.status);
@@ -162,6 +178,7 @@
                     const payload = {
                         service_date: $('#service_date').val(),
                         depart_time: $('#depart_time').val(),
+                        round_no: $('#round_no').val() || undefined,
                         route_id: $('#route_id').val(),
                         vehicle_id: $('#vehicle_id').val(),
                         driver_id: $('#driver_id').val(),

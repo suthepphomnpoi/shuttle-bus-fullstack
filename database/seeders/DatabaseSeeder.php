@@ -264,6 +264,13 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Cafeteria'],
             ['name' => 'Airport Terminal'],
             ['name' => 'Bus Station'],
+            // --- Additional Thai places ---
+            ['name' => 'มหาวิทยาลัยเทคโนโลยีมหานคร'],
+            ['name' => 'โลตัสหนองจอก'],
+            ['name' => 'รงพยาบาลหนองจอก'],
+            ['name' => 'Big C หนองจอก'],
+            ['name' => 'สวนสาธารณะหนองจอก'],
+            ['name' => 'ร้านส้มตำป้านาง ซอย8'],
         ];
         foreach ($places as $p) {
             if (!DB::table('mp_places')->where('name', $p['name'])->exists()) {
@@ -323,44 +330,7 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // ===== Step 6.8: Sample Trips (idempotent) =====
-        $today = date('Y-m-d');
-        $routeIds   = DB::table('mp_routes')->pluck('route_id')->map(fn($v) => (int)$v)->values()->all();
-        $vehicleIds = DB::table('mp_vehicles')->pluck('vehicle_id')->map(fn($v) => (int)$v)->values()->all();
-        $driverIds  = DB::table('mp_employees')->orderBy('employee_id')->limit(5)->pluck('employee_id')->map(fn($v) => (int)$v)->values()->all();
-
-        if (!empty($routeIds) && !empty($vehicleIds) && !empty($driverIds)) {
-            // สร้าง 3 รอบวันนี้ 08:00, 09:00, 10:00
-            $times = ['08:00','09:00','10:00'];
-            foreach ($times as $i => $t) {
-                $routeId   = $routeIds[$i % count($routeIds)];
-                $vehicleId = $vehicleIds[$i % count($vehicleIds)];
-                $driverId  = $driverIds[$i % count($driverIds)];
-
-                // ข้ามถ้ามีซ้ำ (ตาม unique constraint)
-                $exists = DB::table('mp_trips')
-                    ->where('service_date', $today)
-                    ->where('depart_time', $t)
-                    ->where('vehicle_id', $vehicleId)
-                    ->exists();
-                if ($exists) continue;
-
-                DB::table('mp_trips')->insert([
-                    'route_id'         => $routeId,
-                    'vehicle_id'       => $vehicleId,
-                    'driver_id'        => $driverId,
-                    'service_date'     => $today, // Oracle oci8 รับ YYYY-MM-DD
-                    'depart_time'      => $t,
-                    'estimated_minutes'=> 45,
-                    'capacity'         => (int) (DB::table('mp_vehicles')->where('vehicle_id', $vehicleId)->value('capacity') ?? 20),
-                    'reserved_seats'   => 0,
-                    'status'           => 'scheduled',
-                    'notes'            => null,
-                    'created_at'       => DB::raw('SYSDATE'),
-                    'updated_at'       => DB::raw('SYSDATE'),
-                ]);
-            }
-        }
+        // (Removed) Step 6.8: Sample Trips — no auto-created trips; add via UI instead.
 
         // ===== Step 7: Invalidate menu access cache/version =====
         if (function_exists('bumpMenuAccessVersion')) {

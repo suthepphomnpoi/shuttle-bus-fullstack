@@ -182,12 +182,12 @@ Route::middleware('employee.auth')->group(function () {
         Route::prefix('trips')->middleware('position.menu:trips_manage')->group(function () {
             Route::view('/', 'backoffice.trips');
             Route::get('/data', [TripController::class, 'data']);
-            Route::get('/{id}', [TripController::class, 'show']);
-            Route::post('/', [TripController::class, 'store']);
-            Route::put('/{id}', [TripController::class, 'update']);
-            Route::delete('/{id}', [TripController::class, 'destroy']);
-            // Init lists for dropdowns
+            // Init lists for dropdowns (must be before /{id} to avoid being treated as an id)
             Route::get('/init', [TripController::class, 'init']);
+            Route::get('/{id}', [TripController::class, 'show'])->whereNumber('id');
+            Route::post('/', [TripController::class, 'store']);
+            Route::put('/{id}', [TripController::class, 'update'])->whereNumber('id');
+            Route::delete('/{id}', [TripController::class, 'destroy'])->whereNumber('id');
         });
     });
 });

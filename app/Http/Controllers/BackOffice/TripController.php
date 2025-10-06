@@ -17,8 +17,14 @@ class TripController extends Controller
     public function init()
     {
         $routes = MpRoute::select(['route_id','name'])->orderBy('name')->get();
-        $vehicles = MpVehicle::select(['vehicle_id','license_plate'])->orderBy('license_plate')->get();
-        $drivers = MpEmployee::select(['employee_id','first_name','last_name'])->orderBy('first_name')->get()
+        $vehicles = MpVehicle::select(['vehicle_id','license_plate','capacity'])->orderBy('license_plate')->get();
+        // Show only employees whose position name is 'Driver'
+        $drivers = MpEmployee::from('mp_employees as e')
+            ->join('mp_positions as p', 'p.position_id', '=', 'e.position_id')
+            ->whereRaw('LOWER(p.name) = ?', ['driver'])
+            ->select(['e.employee_id','e.first_name','e.last_name'])
+            ->orderBy('e.first_name')
+            ->get()
             ->map(fn($e)=>[
                 'employee_id' => $e->employee_id,
                 'name' => $e->first_name.' '.$e->last_name,
@@ -33,6 +39,7 @@ class TripController extends Controller
             ->leftJoin('mp_employees as e','e.employee_id','=','mp_trips.driver_id')
             ->select([
                 'mp_trips.trip_id',
+                'mp_trips.round_no',
                 'mp_trips.service_date',
                 'mp_trips.depart_time',
                 'r.name as route_name',
@@ -72,6 +79,7 @@ class TripController extends Controller
             'driver_id' => ['required','integer','exists:mp_employees,employee_id'],
             'service_date' => ['required','date'],
             'depart_time' => ['required','regex:/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/'],
+            'round_no' => ['nullable','integer','min:1'],
             'estimated_minutes' => ['nullable','integer','min:0'],
             'capacity' => ['required','integer','min:1'],
             'reserved_seats' => ['nullable','integer','min:0'],
@@ -129,10 +137,29 @@ class TripController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePayload($request);
-        // Default reserved
+        // Defaults
         if (!isset($validated['reserved_seats'])) $validated['reserved_seats'] = 0;
-        $trip = MpTrip::create($validated);
-        return response()->json(['message'=>'Created','id'=>$trip->trip_id]);
+        if (empty($validated['status'])) $validated['status'] = 'scheduled';
+
+        // Assign round_no atomically per (service_date, route_id)
+        $trip = DB::transaction(function() use ($validated) {
+            // lock rows on same date+route to avoid race; compatible for Oracle via FOR UPDATE NOWAIT on a dummy max subquery
+            $maxRound = DB::table('mp_trips')
+                ->where('service_date', $validated['service_date'])
+                ->where('route_id', (int)$validated['route_id'])
+                ->max('round_no');
+            $nextRound = (int)($maxRound ?? 0) + 1;
+
+            $data = $validated;
+            $data['round_no'] = $data['round_no'] ?? $nextRound;
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+
+            // In case of rare race, database unique constraint will ensure no duplicates
+            return MpTrip::create($data);
+        });
+
+        return response()->json(['message' => 'Created', 'id' => $trip->trip_id]);
     }
 
     public function update($id, Request $request)
